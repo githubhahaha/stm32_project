@@ -30,6 +30,10 @@ u8 file_over=0;
 u8 file_start=0;
 u8 aRxBuffer[RXBUFFERSIZE];//HAL库使用的串口接收缓冲
 u8 flag_file = 0;
+u8 md5_buff[32]={0};  //md5接收缓冲区
+u8 md5_len=0;//计数
+u8 md5_recv=0;//md5接收完全标志位
+
  
 void uart_init(u32 bound)
 {
@@ -78,7 +82,7 @@ void USART3_IRQHandler(void)   //
 	HAL_UART_Receive(&usart3_handler,&Res,1,1000); 
 		if(USART_RX_CNT<USART_REC_LEN)
 		{
-			if(Res == '#')
+			if(Res == '#')//文件接收结尾标志
 			{
 				USART_RX_BUF[USART_RX_CNT]=Res;
 				file_over++;
@@ -86,7 +90,7 @@ void USART3_IRQHandler(void)   //
 				{
 					flag_file =1;
 					HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_0);
-					for(int i=0;i<10;i++)
+					for(int i=0;i<10;i++)//去掉接收到的10个#
 					{
 						USART_RX_BUF[USART_RX_CNT]=0x00;
 						USART_RX_CNT--;
@@ -94,17 +98,25 @@ void USART3_IRQHandler(void)   //
 					}
 				}
 				USART_RX_CNT++;
+			}else if(flag_file==1){//接收文件之后的md5信息
+				if(md5_len>30){
+					md5_buff[md5_len]=Res;
+					md5_recv = 1;
+					return;
+				}
+				md5_buff[md5_len]=Res;
+				md5_len++;
 			}
-			else if(Res=='&'){
+			else if(Res=='&'){//更新文件开头信号
 				USART_RX_BUF[USART_RX_CNT]=Res;
 				file_start++;
 				if(file_start==10)
 				{
 					int tmp = USART_RX_CNT;
 					USART_RX_CNT=0;
-					for(int i=tmp;i>0;i--)
+					for(;tmp>0;tmp--)
 					{
-						USART_RX_BUF[i]=0x00;
+						USART_RX_BUF[tmp]=0x00;
 					}
 					file_start=0;
 					return;
@@ -114,6 +126,8 @@ void USART3_IRQHandler(void)   //
 			else{
 				file_over=0;
 				file_start=0;
+				md5_recv=0;
+				md5_len=0;
 				USART_RX_BUF[USART_RX_CNT]=Res;
 				USART_RX_CNT++;
 			}				

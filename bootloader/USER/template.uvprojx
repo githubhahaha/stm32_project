@@ -136,8 +136,8 @@
             <Capability>1</Capability>
             <DriverSelection>4101</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
-          <Flash2>STLink\ST-LINKIII-KEIL_SWO.dll</Flash2>
+          <bUseTDR>1</bUseTDR>
+          <Flash2>BIN\UL2CM3.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F429xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\HALLIB\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\SYSTEM\iap;..\SYSTEM\STMFLASH</IncludePath>
+              <IncludePath>..\CORE;..\HALLIB\Inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\SYSTEM\iap;..\SYSTEM\STMFLASH;..\SYSTEM\MD5</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -431,6 +431,11 @@
               <FileName>stmflash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\SYSTEM\STMFLASH\stmflash.c</FilePath>
+            </File>
+            <File>
+              <FileName>md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\MD5\md5.c</FilePath>
             </File>
           </Files>
         </Group>
