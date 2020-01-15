@@ -14,8 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->info->append(tr("连接，请重试\n"));
     }
     ui->info->append(tr("连接成功\n"));
+    ui->textBrowser->setText(version_num);
 }
-
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -52,6 +52,65 @@ void MainWindow::read_data()
         float WE_num = (list[4].toFloat())/100000;
         QString WE_n=QString("%1").arg(WE_num);
         ui->GPS->setText(NS+':'+NS_n+';'+ WE +':'+WE_n);
+    }
+    if(list[0]=="version")
+    {
+        if(list[1]!=version_num)
+        {
+            sendSize=0;
+            QString fileName="/home/zhao/Desktop/RTC.bin";
+            QFileInfo *pcsfileInfo = new QFileInfo(fileName);
+             binSize = pcsfileInfo->size ();
+            name = pcsfileInfo->fileName();
+            QString b = tr("%1").arg(binSize);
+            //ui->info->setText(b);
+            // QFile* file = new QFile;
+            file->setFileName(fileName);
+            bool ok = file->open(QIODevice::ReadOnly);
+
+            if(ok)
+            {
+                ui->info->setText(b);
+                QString head = QString("0:%1&%2&%3").arg(name).arg(binSize).arg(version_num);
+                qint64 len_head = client->write(head.toUtf8(),head.length());
+                client->flush();
+                if(len_head < 0)
+                {
+                    ui->info->append("头文件没有发送成功");
+                    file->close();
+                }
+                else
+                {
+                    ui->info->append("头文件发送成功");
+                    client->flush();
+                    for(int i=0;i<1000;i++)
+                        for(int j=0;j<100;j++);
+                    qint64 len = 0;
+                    do{
+                        len = 0;
+                        char buf[4*1024] = {0};//每次发送数据大小
+                        len = file->read(buf,sizeof(buf));//读文件
+                        len = client->write(buf,len);//发文件
+                        sendSize += len;
+                        ui->info->append("-");
+                    }while(len > 0);
+                    if(sendSize != binSize){
+                        file->close();
+                        ui->info->append("文件未发送完全");
+                        return ;
+                    }
+                    ui->info->append("文件发送完毕");
+                    file->close();
+                }
+
+            }
+        }
+        else
+        {
+            QString version = QString("2:%1").arg(version_num);
+            client->write(version.toUtf8());
+        }
+
     }
     if(list[0] == req_update){
         sendSize=0;
@@ -161,17 +220,8 @@ void MainWindow::on_pushButton_2_clicked()
 }
 
 
-void MainWindow::on_check_self_clicked()
-{
 
-}
-
-void MainWindow::on_get_local_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_3_clicked()
+/*void MainWindow::on_pushButton_3_clicked()
 {
     QDateTime dateTime = QDateTime::currentDateTime();
     // 字符串格式化
@@ -179,5 +229,16 @@ void MainWindow::on_pushButton_3_clicked()
     client->write(timestamp.toUtf8());
     QString data1 = "已发送："+ timestamp;
     ui->info->append(data1);
+
+}*/
+
+void MainWindow::on_get_version_clicked()
+{
+    QString get_version = "1:getver&123!";
+    client->write(get_version.toUtf8());
+}
+
+void MainWindow::on_get_local_clicked()
+{
 
 }

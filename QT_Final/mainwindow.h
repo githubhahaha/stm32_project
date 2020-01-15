@@ -30,11 +30,11 @@ private slots:
     void on_pushButton_2_clicked();
 
 
-    void on_check_self_clicked();
-
     void on_get_local_clicked();
 
-    void on_pushButton_3_clicked();
+
+
+    void on_get_version_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -44,6 +44,7 @@ private:
     QString name;
     qint64 sendSize=0;
     QString req_update="update";
+    QString version_num="1";
 };
 
 #endif // MAINWINDOW_H
