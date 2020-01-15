@@ -3,6 +3,8 @@ from socket import *
 from time import ctime
 import time
 import binascii
+import hashlib
+import os
 
 host = ''
 Mcu_Port = 6666
@@ -17,6 +19,21 @@ global MCU_Se_Re
 
 global Client_Socket
 global Client_Se_Re
+
+
+def GetFileMd5(filename):
+    if not os.path.isfile(filename):
+        return
+    myHash = hashlib.md5()
+    f = open(filename,'rb')
+    while True:
+        b = f.read(8096)
+        if not b :
+            break
+        myHash.update(b)
+    f.close()
+    return myHash.hexdigest()
+
 def MCU_Task():
    global MCU_Se_Re
    global MCU_Se_Re
@@ -51,6 +68,8 @@ def MCU_Task():
             global Client_Se_Re
             Client_Se_Re.send(data_mcu.encode())
             print ("success")
+
+
 def Client_Task():
     global Client_Socket
     global Client_Se_Re
@@ -61,6 +80,7 @@ def Client_Task():
         print("Client Connection from :",ad)
         update=0
         while True:
+            update=0
             try:
                 data = Client_Se_Re.recv(Client_buffsize).decode('UTF-8')
                 if not data:
@@ -72,6 +92,7 @@ def Client_Task():
                     filename=file_info[0]
                     filename="/root/"+filename
                     filesize=int(file_info[1])
+                    version=file_info[2]
                     print (filename+str(filesize))
                     fp = open(filename,'wb')
                     print ("recving...")
@@ -87,9 +108,14 @@ def Client_Task():
                     fp.close()
                     print ("recv succeeded !")
                     update=1
-                else:
+                if dataall[0]=='1':
                     print (data+"no wenjain")
                     MCU_Se_Re.send(dataall[1].encode())
+                    print ("To Mcu ok")
+                if dataall[0]=='2':
+                    a='*'
+                    for i in range(10):
+                        MCU_Se_Re.send(a.encode())
             except Exception as e:
                 fp.close()
                 print (e)
@@ -108,6 +134,8 @@ def Client_Task():
                     a='#'
                     for i in range(10):
                         MCU_Se_Re.send(a.encode())
+                    MCU_Se_Re.send(GetFileMd5(filename).encode())
+                    MCU_Se_Re.send(version.encode())
                     print("toMCU ok")
                 except Exception as e:
                     fp.close()
